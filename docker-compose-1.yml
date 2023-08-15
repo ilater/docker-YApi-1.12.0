@@ -1,0 +1,56 @@
+version: '3.1'
+services:
+  yapi-web:
+    image: lateri/docker-yapi:1.12.0
+    container_name: yapi-web
+    ports:
+      - 3000:3000
+    environment:
+      - YAPI_ADMIN_ACCOUNT=admin@docker.yapi
+      - YAPI_ADMIN_PASSWORD=admin
+      - YAPI_CLOSE_REGISTER=true
+      - YAPI_DB_SERVERNAME=yapi-mongo
+      - YAPI_DB_USER=yapi
+      - YAPI_DB_PASS=yapi
+      - YAPI_DB_PORT=27017
+      - YAPI_DB_DATABASE=yapi
+      - YAPI_MAIL_ENABLE=false
+      - YAPI_LDAP_LOGIN_ENABLE=false
+      - YAPI_PLUGINS=[]
+    depends_on:
+      - yapi-mongo
+    links:
+      - yapi-mongo
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 128M
+        reservations:
+          cpus: "0.5"
+          memory: 64M
+  yapi-mongo:
+    image: mongo:latest
+    container_name: yapi-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    command: [--auth]
+    volumes:
+      - ./data/db:/data/db
+      # mongo 初始化脚本 进行初始化用户
+      - ./init/:/docker-entrypoint-initdb.d/
+    expose:
+      - 27017
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 256M
+        reservations:
+          cpus: "0.5"
+          memory: 64M
